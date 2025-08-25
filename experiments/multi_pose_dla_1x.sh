@@ -6,3 +6,5 @@ python test.py multi_pose --exp_id dla_1x --dataset coco_hp --keep_res --resume
 # flip test
 python test.py multi_pose --exp_id dla_1x --dataset coco_hp --keep_res --resume --flip_test
 cd ..
+
+python demo.py multi_pose --demo /mnt/quedoulin/github_code/CenterNet/images/33823288584_1d21cf0a26_k.jpg --load_model ../multi_pose_dla_1x.pth

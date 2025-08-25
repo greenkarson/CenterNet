@@ -27,7 +27,9 @@ class CtdetDetector(BaseDetector):
   
   def process(self, images, return_time=False):
     with torch.no_grad():
-      output = self.model(images)[-1]
+      hm, wh, reg = self.model(images)
+      torch.onnx.export(self.model, images, "ctdet-resdcn18.onnx", opset_version=11, verbose=False, output_names=["hm", "wh", "reg"])
+      quit()
       hm = output['hm'].sigmoid_()
       wh = output['wh']
       reg = output['reg'] if self.opt.reg_offset else None
@@ -93,4 +95,6 @@ class CtdetDetector(BaseDetector):
       for bbox in results[j]:
         if bbox[4] > self.opt.vis_thresh:
           debugger.add_coco_bbox(bbox[:4], j - 1, bbox[4], img_id='ctdet')
-    debugger.show_all_imgs(pause=self.pause)
+    
+    debugger.save_img(imgId='ctdet', path="debug")
+    # debugger.show_all_imgs(pause=self.pause)

@@ -100,4 +100,5 @@ class MultiPoseDetector(BaseDetector):
       if bbox[4] > self.opt.vis_thresh:
         debugger.add_coco_bbox(bbox[:4], 0, bbox[4], img_id='multi_pose')
         debugger.add_coco_hp(bbox[5:39], img_id='multi_pose')
-    debugger.show_all_imgs(pause=self.pause)
+    debugger.save_img(imgId='multi_pose', path="debug")
+    # debugger.show_all_imgs(pause=self.pause)
