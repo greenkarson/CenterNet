@@ -16,6 +16,7 @@ import logging
 import torch
 import torch.nn as nn
 from .DCNv2.dcn_v2 import DCN
+# from .DCNv2.dcn_v2_onnx import DCN
 import torch.utils.model_zoo as model_zoo
 
 BN_MOMENTUM = 0.1
@@ -260,7 +261,25 @@ class PoseResNet(nn.Module):
         ret = {}
         for head in self.heads:
             ret[head] = self.__getattr__(head)(x)
-        return [ret]
+        if self.training:                                                                                                           
+            return [ret]                                                                                                             
+        else:                                                                                                                       
+            hm = ret['hm'].sigmoid_()                                                                                               
+            hmax = nn.functional.max_pool2d(hm, (3, 3), stride=1, padding=1)                                                         
+            keep = (hmax == hm).float()                                                                                             
+            hm = hm * keep                                                                                                                   
+            if len(self.heads) == 3: # 2D object detection                                                                           
+                return hm, ret['wh'], ret['reg']                                                                                              
+            elif len(self.heads) == 6: # multi_pose                                                                                 
+                wh, reg, hm_hp, hps, hp_offset = ret['wh'], ret['reg'], ret['hm_hp'], ret['hps'], ret['hp_offset']                            
+                hm_hp = hm_hp.sigmoid_()                                                                                             
+                hm_hp_max = nn.functional.max_pool2d(hm_hp, (3, 3), stride=1, padding=1)                                            
+                keep = (hm_hp_max == hm_hp).float()                                                                                
+                hm_hp = hm_hp * keep                                                                                                          
+                return hm, wh, reg, hps, hm_hp, hp_offset                                                                            
+            else:                                                                                                                   
+                #TODO                                                                                                               
+                raise Exception("Not implemented!")  
 
     def init_weights(self, num_layers):
         if 1:
